@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muhammad Umer Bilal | AI/ML Engineer Portfolio</title>
+    <style>
+        :root {
+            --primary: #00f3ff;
+            --secondary: #bd00ff;
+            --bg-dark: rgba(10, 10, 15, 0.85);
+            --text-main: #ffffff;
+            --text-muted: #a0a0b0;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #050505;
+            color: var(--text-main);
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none; /* Let clicks pass through to 3D where empty */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        header {
+            padding: 2rem;
+            pointer-events: auto;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+        }
+
+        h2 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-top: 5px;
+        }
+
+        nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* Main Content Area */
+        #content-area {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* Left aligned content */
+            padding: 0 5%;
+            pointer-events: none;
+        }
+
+        .card {
+            background: var(--bg-dark);
+            border-left: 3px solid var(--primary);
+            padding: 2rem;
+            max-width: 500px;
+            border-radius: 0 10px 10px 0;
+            backdrop-filter: blur(10px);
+            transform: translateX(-50px);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; /* Hidden by default */
+        }
+
+        .card.visible {
+            transform: translateX(0);
+            opacity: 1;
+            display: block;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .card-content {
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Scrollbar styling */
+        .card-content::-webkit-scrollbar { width: 5px; }
+        .card-content::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+        .card-content::-webkit-scrollbar-thumb { background: var(--primary); }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: rgba(0, 243, 255, 0.1);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(0, 243, 255, 0.3);
+        }
+
+        .exp-item, .project-item {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+        }
+        .exp-item:last-child { border-bottom: none; }
+
+        .date { font-size: 0.8rem; color: var(--secondary); margin-bottom: 5px; display: block; }
+        .role { font-weight: bold; font-size: 1.1rem; color: #fff; }
+        .company { font-style: italic; color: var(--text-muted); }
+        
+        ul { padding-left: 20px; margin-top: 10px; }
+        li { margin-bottom: 5px; font-size: 0.9rem; line-height: 1.4; color: #ddd; }
+
+        footer {
+            padding: 1rem 2rem;
+            pointer-events: auto;
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        }
+
+        footer a { color: var(--primary); text-decoration: none; margin-left: 15px; }
+        footer a:hover { text-shadow: 0 0 10px var(--primary); }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            letter-spacing: 5px;
+            transition: opacity 1s ease;
+        }
+
+        @media (max-width: 768px) {
+            header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            nav { width: 100%; overflow-x: auto; padding-bottom: 5px; }
+            .card { max-width: 100%; margin: 0 20px; }
+            #content-area { padding: 0; justify-content: center; }
+        }
+    </style>
+    <!-- Three.js Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+    <div id="loader">INITIALIZING NEURAL LINK...</div>
+
+    <div id="canvas-container"></div>
+
+    <div id="ui-layer">
+        <header>
+            <div>
+                <h1>Muhammad Umer Bilal</h1>
+                <h2>Aspiring AI/ML Engineer</h2>
+            </div>
+            <nav>
+                <button class="nav-btn active" onclick="showSection('home')">Home</button>
+                <button class="nav-btn" onclick="showSection('skills')">Skills</button>
+                <button class="nav-btn" onclick="showSection('projects')">Projects</button>
+                <button class="nav-btn" onclick="showSection('experience')">Exp</button>
+            </nav>
+        </header>
+
+        <div id="content-area">
+            
+            <!-- Home Card -->
+            <div id="home" class="card visible">
+                <h3>Welcome</h3>
+                <div class="card-content">
+                    <p>Bachelor of Science in Computer Science student (NUML, Lahore) with a passion for Data Science and Machine Learning.</p>
+                    <p>I build intelligent backend systems and integrate AI models to solve real-world problems.</p>
+                    <div class="tag-container">
+                        <span class="tag">Python</span>
+                        <span class="tag">Machine Learning</span>
+                        <span class="tag">Django</span>
+                        <span class="tag">Computer Vision</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Card -->
+            <div id="skills" class="card">
+                <h3>Technical Arsenal</h3>
+                <div class="card-content">
+                    <div class="exp-item">
+                        <span class="role">Languages</span>
+                        <div class="tag-container">
+                            <span class="tag">Python</span>
+                            <span class="tag">SQL</span>
+                        </div>
+                    </div>
+                    <div class="exp-item">
+                        <span class="role">AI & ML</span>
+                        <div class="tag-container">
+                            <span class="tag">TensorFlow</span>
+                            <span class="tag">Scikit-Learn</span>
+                            <span class="tag">Pandas</span>
+                            <span class="tag">NumPy</span>
+                            <span class="tag">OpenCV</span>
+                            <span class="tag">YOLO</span>
+                            <span class="tag">OpenAI API</span>
+                        </div>
+                    </div>
+                    <div class="exp-item">
+                        <span class="role">Backend & Tools</span>
+                        <div class="tag-container">
+                            <span class="tag">Django</span>
+                            <span class="tag">REST APIs</span>
+                            <span class="tag">PostgreSQL</span>
+                            <span class="tag">Git/GitHub</span>
+                            <span class="tag">Docker</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects Card -->
+            <div id="projects" class="card">
+                <h3>Key Projects</h3>
+                <div class="card-content">
+                    <div class="project-item">
+                        <span class="role">Resume Analyzer API</span>
+                        <span class="company">Python, NLP, Django DRF</span>
+                        <ul>
+                            <li>Backend API that parses PDF resumes and extracts key skills/contact info.</li>
+                            <li>Implemented NLP to match keywords against job descriptions with scoring algorithms.</li>
+                            <li>Exposed RESTful endpoints for file upload and JSON analysis results.</li>
+                        </ul>
+                    </div>
+                    <div class="project-item">
+                        <span class="role">Smart Parking System</span>
+                        <span class="company">Python, OpenCV, PostgreSQL</span>
+                        <ul>
+                            <li>Computer vision solution for automating parking slot detection (95%+ accuracy).</li>
+                            <li>Scalable Django backend for real-time occupancy tracking and dynamic pricing.</li>
+                            <li>Secure payment gateway integration and admin dashboard.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Experience Card -->
+            <div id="experience" class="card">
+                <h3>Professional History</h3>
+                <div class="card-content">
+                    <div class="exp-item">
+                        <span class="role">Backend Developer (Django)</span>
+                        <span class="company">IBSTech | Lahore</span>
+                        <span class="date">Aug 2023 – Present</span>
+                        <ul>
+                            <li>Developing server-side logic using Python and Django framework.</li>
+                            <li>Creating and integrating REST APIs for frontend functionality.</li>
+                            <li>Optimizing PostgreSQL database queries and schemas.</li>
+                            <li>Bug fixing and code stability improvements.</li>
+                        </ul>
+                    </div>
+                    <div class="exp-item">
+                        <span class="role">Booking Coordinator</span>
+                        <span class="company">BM Group Inc | Lahore</span>
+                        <span class="date">Aug 2021 – Feb 2023</span>
+                        <ul>
+                            <li>Managed booking systems handling 100+ daily requests.</li>
+                            <li>Reduced response time by 25% through process improvements.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            <span>+92-313-4414248</span>
+            <a href="mailto:bilalmehar973@gmail.com">Email</a>
+            <a href="https://www.linkedin.com/in/umer-bilal-915143242/">LinkedIn</a>
+            <a href="https://github.com/umerbi1a1">GitHub</a>
+        </footer>
+    </div>
+
+    <script>
+        // --- 1. SETUP ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        // Fog for depth
+        scene.fog = new THREE.FogExp2(0x050505, 0.035);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 25;
+        camera.position.x = -10;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.enableZoom = false; // Disable zoom to keep UI consistent
+        
+        // --- 2. ASSETS (PROCEDURAL) ---
+        
+        // Create a glow texture programmatically
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(0, 243, 255, 0.6)');
+            gradient.addColorStop(0.5, 'rgba(0, 0, 50, 0.2)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            const texture = new THREE.Texture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        const particleMaterial = new THREE.PointsMaterial({
+            size: 0.5,
+            map: createGlowTexture(),
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            color: 0x00f3ff
+        });
+
+        // --- 3. SCENE OBJECTS ---
+
+        // A. The "Neural Network" - A procedural connection of nodes
+        const particleCount = 200;
+        const connectionDistance = 6;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        const particlesData = []; // Store velocity/animation data
+
+        for (let i = 0; i < particleCount; i++) {
+            const x = (Math.random() - 0.5) * 40;
+            const y = (Math.random() - 0.5) * 40;
+            const z = (Math.random() - 0.5) * 40;
+
+            particlePositions[i * 3] = x;
+            particlePositions[i * 3 + 1] = y;
+            particlePositions[i * 3 + 2] = z;
+
+            particlesData.push({
+                velocity: new THREE.Vector3(-0.02 + Math.random()*0.04, -0.02 + Math.random()*0.04, -0.02 + Math.random()*0.04),
+                originalPos: new THREE.Vector3(x, y, z)
+            });
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
+        scene.add(particleSystem);
+
+        // Lines connecting close particles
+        const lineMaterial = new THREE.LineBasicMaterial({
+            color: 0xbd00ff,
+            transparent: true,
+            opacity: 0.15,
+            blending: THREE.AdditiveBlending
+        });
+
+        const linesGeometry = new THREE.BufferGeometry();
+        const linesMesh = new THREE.LineSegments(linesGeometry, lineMaterial);
+        scene.add(linesMesh);
+
+        // B. Background Stars
+        const starGeo = new THREE.BufferGeometry();
+        const starCount = 1000;
+        const starPos = new Float32Array(starCount * 3);
+        for(let i=0; i<starCount * 3; i++) {
+            starPos[i] = (Math.random() - 0.5) * 200;
+        }
+        starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+        const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.1, transparent: true, opacity: 0.5});
+        const stars = new THREE.Points(starGeo, starMat);
+        scene.add(stars);
+
+
+        // --- 4. LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0x000000);
+        scene.add(ambientLight);
+
+        // Dynamic lights
+        const light1 = new THREE.PointLight(0x00f3ff, 2, 50);
+        light1.position.set(10, 10, 10);
+        scene.add(light1);
+
+        const light2 = new THREE.PointLight(0xbd00ff, 2, 50);
+        light2.position.set(-10, -10, 10);
+        scene.add(light2);
+
+
+        // --- 5. ANIMATION LOOP ---
+        
+        // Raycaster for simple interaction (optional visual flare)
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        function onMouseMove( event ) {
+            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            
+            // Parallax effect
+            camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.05;
+            camera.position.y += (mouse.y * 0.5 - camera.position.y) * 0.05;
+        }
+        window.addEventListener( 'mousemove', onMouseMove, false );
+
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = clock.getElapsedTime();
+            const delta = clock.getDelta();
+
+            controls.update();
+
+            // 1. Update Particles
+            const positions = particleSystem.geometry.attributes.position.array;
+            let i = 0;
+            while (i < particleCount) {
+                // Move particles
+                positions[i * 3] += particlesData[i].velocity.x;
+                positions[i * 3 + 1] += particlesData[i].velocity.y;
+                positions[i * 3 + 2] += particlesData[i].velocity.z;
+
+                // Bounce off boundaries (simple box)
+                if (positions[i*3] < -25 || positions[i*3] > 25) particlesData[i].velocity.x *= -1;
+                if (positions[i*3+1] < -25 || positions[i*3+1] > 25) particlesData[i].velocity.y *= -1;
+                if (positions[i*3+2] < -25 || positions[i*3+2] > 25) particlesData[i].velocity.z *= -1;
+
+                // Gentle sine wave pulse
+                const pulse = Math.sin(time * 0.5 + i) * 0.1;
+                
+                i++;
+            }
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.rotation.y = time * 0.05;
+
+            // 2. Update Lines
+            updateLines();
+
+            // 3. Move Lights
+            light1.position.x = Math.sin(time * 0.7) * 20;
+            light1.position.z = Math.cos(time * 0.3) * 20;
+            light2.position.x = Math.cos(time * 0.5) * 20;
+            light2.position.z = Math.sin(time * 0.9) * 20;
+
+            renderer.render(scene, camera);
+        }
+
+        function updateLines() {
+            let linePositions = [];
+            const positions = particleSystem.geometry.attributes.position.array;
+
+            // Brute force N^2 check (okay for < 300 particles)
+            for (let i = 0; i < particleCount; i++) {
+                for (let j = i + 1; j < particleCount; j++) {
+                    const dx = positions[i*3] - positions[j*3];
+                    const dy = positions[i*3+1] - positions[j*3+1];
+                    const dz = positions[i*3+2] - positions[j*3+2];
+                    const dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
+
+                    if (dist < connectionDistance) {
+                        linePositions.push(
+                            positions[i*3], positions[i*3+1], positions[i*3+2],
+                            positions[j*3], positions[j*3+1], positions[j*3+2]
+                        );
+                    }
+                }
+            }
+            linesMesh.geometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+        }
+
+        animate();
+
+        // --- 6. UI INTERACTION LOGIC ---
+
+        window.showSection = function(sectionId) {
+            // Update Navigation UI
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            // Find button that calls this function (rough approximation)
+            event.target.classList.add('active');
+
+            // Update Cards
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('visible');
+                setTimeout(() => {
+                    if(!card.classList.contains('visible')) card.style.display = 'none';
+                }, 500); // Wait for fade out
+            });
+
+            const targetCard = document.getElementById(sectionId);
+            targetCard.style.display = 'block';
+            // Slight delay to allow display:block to render before adding opacity class
+            setTimeout(() => {
+                targetCard.classList.add('visible');
+            }, 50);
+
+            // Change 3D Scene based on section (Atmosphere shift)
+            if (sectionId === 'home') {
+                particleMaterial.color.setHex(0x00f3ff); // Cyan
+                lineMaterial.color.setHex(0xbd00ff);
+                controls.autoRotateSpeed = 0.5;
+            } else if (sectionId === 'skills') {
+                particleMaterial.color.setHex(0x00ff00); // Matrix Green
+                lineMaterial.color.setHex(0x005500);
+                controls.autoRotateSpeed = 2.0; // Faster
+            } else if (sectionId === 'projects') {
+                particleMaterial.color.setHex(0xffaa00); // Orange
+                lineMaterial.color.setHex(0xff0000);
+                controls.autoRotateSpeed = 0.2; // Slower analysis
+            } else if (sectionId === 'experience') {
+                particleMaterial.color.setHex(0xff00ff); // Magenta
+                lineMaterial.color.setHex(0x0000ff);
+                controls.autoRotateSpeed = 1.0;
+            }
+        };
+
+        // Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Hide Loader
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = 0;
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                }, 1000);
+            }, 1000);
+        };
+
+    </script>
+</body>
+</html>
