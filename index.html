@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Muhammad Umer Bilal |Portfolio</title>
+    <title>Muhammad Umer Bilal | Portfolio</title>
     <style>
         :root {
             --primary: #00f3ff;
@@ -313,11 +313,11 @@
                         </ul>
                     </div>
                      <div class="project-item">
-                        <span class="role">Resturant Website</span>
+                        <span class="role">Restaurant Website</span>
                         <span class="company">Javascript, HTML, CSS, React</span>
                         <ul>
-                            <li>Clean and maintainable website built using react for faster respose time</li>
-                            <li>Table reservation system integrated to website</li>
+                            <li>Clean and maintainable website built using React for faster response time.</li>
+                            <li>Table reservation system integrated to website.</li>
                         </ul>
                     </div>
                 </div>
@@ -332,9 +332,9 @@
                         <span class="company">IBSTech | Lahore</span>
                         <span class="date">Aug 2023 – Present</span>
                         <ul>
-                            <li>Managed high-volume customer interactions for UK-based taxi service, resolving 95% of issues on first contact</li>
-                            <li>Streamlined booking coordination process using iCabbi platform, improving operational efficiency by 30%</li>
-                            <li>Developed Excel-based automation tools for daily reporting, reducing manual processing time by 2 hours/day</li>
+                            <li>Managed high-volume customer interactions for UK-based taxi service, resolving 95% of issues on first contact.</li>
+                            <li>Streamlined booking coordination process using iCabbi platform, improving operational efficiency by 30%.</li>
+                            <li>Developed Excel-based automation tools for daily reporting, reducing manual processing time by 2 hours/day.</li>
                         </ul>
                     </div>
                     <div class="exp-item">
@@ -363,7 +363,6 @@
         // --- 1. SETUP ---
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        // Fog for depth
         scene.fog = new THREE.FogExp2(0x050505, 0.035);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -380,11 +379,9 @@
         controls.dampingFactor = 0.05;
         controls.autoRotate = true;
         controls.autoRotateSpeed = 0.5;
-        controls.enableZoom = false; // Disable zoom to keep UI consistent
+        controls.enableZoom = false; 
         
         // --- 2. ASSETS (PROCEDURAL) ---
-        
-        // Create a glow texture programmatically
         function createGlowTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 64;
@@ -412,13 +409,11 @@
         });
 
         // --- 3. SCENE OBJECTS ---
-
-        // A. The "Neural Network" - A procedural connection of nodes
         const particleCount = 200;
         const connectionDistance = 6;
         const particlesGeometry = new THREE.BufferGeometry();
         const particlePositions = new Float32Array(particleCount * 3);
-        const particlesData = []; // Store velocity/animation data
+        const particlesData = [];
 
         for (let i = 0; i < particleCount; i++) {
             const x = (Math.random() - 0.5) * 40;
@@ -439,7 +434,6 @@
         const particleSystem = new THREE.Points(particlesGeometry, particleMaterial);
         scene.add(particleSystem);
 
-        // Lines connecting close particles
         const lineMaterial = new THREE.LineBasicMaterial({
             color: 0xbd00ff,
             transparent: true,
@@ -451,7 +445,6 @@
         const linesMesh = new THREE.LineSegments(linesGeometry, lineMaterial);
         scene.add(linesMesh);
 
-        // B. Background Stars
         const starGeo = new THREE.BufferGeometry();
         const starCount = 1000;
         const starPos = new Float32Array(starCount * 3);
@@ -463,12 +456,10 @@
         const stars = new THREE.Points(starGeo, starMat);
         scene.add(stars);
 
-
         // --- 4. LIGHTING ---
         const ambientLight = new THREE.AmbientLight(0x000000);
         scene.add(ambientLight);
 
-        // Dynamic lights
         const light1 = new THREE.PointLight(0x00f3ff, 2, 50);
         light1.position.set(10, 10, 10);
         scene.add(light1);
@@ -477,22 +468,17 @@
         light2.position.set(-10, -10, 10);
         scene.add(light2);
 
-
         // --- 5. ANIMATION LOOP ---
-        
-        // Raycaster for simple interaction (optional visual flare)
-        const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
-        function onMouseMove( event ) {
-            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
             
-            // Parallax effect
             camera.position.x += (mouse.x * 0.5 - camera.position.x) * 0.05;
             camera.position.y += (mouse.y * 0.5 - camera.position.y) * 0.05;
         }
-        window.addEventListener( 'mousemove', onMouseMove, false );
+        window.addEventListener('mousemove', onMouseMove, false);
 
         const clock = new THREE.Clock();
 
@@ -500,36 +486,29 @@
             requestAnimationFrame(animate);
             
             const time = clock.getElapsedTime();
-            const delta = clock.getDelta();
-
             controls.update();
 
-            // 1. Update Particles
+            // Update Particles
             const positions = particleSystem.geometry.attributes.position.array;
             let i = 0;
             while (i < particleCount) {
-                // Move particles
                 positions[i * 3] += particlesData[i].velocity.x;
                 positions[i * 3 + 1] += particlesData[i].velocity.y;
                 positions[i * 3 + 2] += particlesData[i].velocity.z;
 
-                // Bounce off boundaries (simple box)
                 if (positions[i*3] < -25 || positions[i*3] > 25) particlesData[i].velocity.x *= -1;
                 if (positions[i*3+1] < -25 || positions[i*3+1] > 25) particlesData[i].velocity.y *= -1;
                 if (positions[i*3+2] < -25 || positions[i*3+2] > 25) particlesData[i].velocity.z *= -1;
-
-                // Gentle sine wave pulse
-                const pulse = Math.sin(time * 0.5 + i) * 0.1;
                 
                 i++;
             }
             particleSystem.geometry.attributes.position.needsUpdate = true;
             particleSystem.rotation.y = time * 0.05;
 
-            // 2. Update Lines
+            // Update Lines
             updateLines();
 
-            // 3. Move Lights
+            // Move Lights
             light1.position.x = Math.sin(time * 0.7) * 20;
             light1.position.z = Math.cos(time * 0.3) * 20;
             light2.position.x = Math.cos(time * 0.5) * 20;
@@ -542,7 +521,6 @@
             let linePositions = [];
             const positions = particleSystem.geometry.attributes.position.array;
 
-            // Brute force N^2 check (okay for < 300 particles)
             for (let i = 0; i < particleCount; i++) {
                 for (let j = i + 1; j < particleCount; j++) {
                     const dx = positions[i*3] - positions[j*3];
@@ -564,43 +542,41 @@
         animate();
 
         // --- 6. UI INTERACTION LOGIC ---
-
         window.showSection = function(sectionId) {
-            // Update Navigation UI
+            // Update Navigation UI cleanly without relying on implicit event parameters
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            // Find button that calls this function (rough approximation)
-            event.target.classList.add('active');
+            const targetBtn = document.querySelector(`nav button[onclick="showSection('${sectionId}')"]`);
+            if(targetBtn) targetBtn.classList.add('active');
 
             // Update Cards
             document.querySelectorAll('.card').forEach(card => {
                 card.classList.remove('visible');
                 setTimeout(() => {
                     if(!card.classList.contains('visible')) card.style.display = 'none';
-                }, 500); // Wait for fade out
+                }, 500); 
             });
 
             const targetCard = document.getElementById(sectionId);
             targetCard.style.display = 'block';
-            // Slight delay to allow display:block to render before adding opacity class
             setTimeout(() => {
                 targetCard.classList.add('visible');
             }, 50);
 
-            // Change 3D Scene based on section (Atmosphere shift)
+            // Change 3D Scene themes based on section
             if (sectionId === 'home') {
-                particleMaterial.color.setHex(0x00f3ff); // Cyan
+                particleMaterial.color.setHex(0x00f3ff); 
                 lineMaterial.color.setHex(0xbd00ff);
                 controls.autoRotateSpeed = 0.5;
             } else if (sectionId === 'skills') {
-                particleMaterial.color.setHex(0x00ff00); // Matrix Green
+                particleMaterial.color.setHex(0x00ff00); 
                 lineMaterial.color.setHex(0x005500);
-                controls.autoRotateSpeed = 2.0; // Faster
+                controls.autoRotateSpeed = 2.0; 
             } else if (sectionId === 'projects') {
-                particleMaterial.color.setHex(0xffaa00); // Orange
+                particleMaterial.color.setHex(0xffaa00); 
                 lineMaterial.color.setHex(0xff0000);
-                controls.autoRotateSpeed = 0.2; // Slower analysis
+                controls.autoRotateSpeed = 0.2; 
             } else if (sectionId === 'experience') {
-                particleMaterial.color.setHex(0xff00ff); // Magenta
+                particleMaterial.color.setHex(0xff00ff); 
                 lineMaterial.color.setHex(0x0000ff);
                 controls.autoRotateSpeed = 1.0;
             }
@@ -622,7 +598,6 @@
                 }, 1000);
             }, 1000);
         };
-
     </script>
 </body>
 </html>
